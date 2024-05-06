@@ -37,7 +37,7 @@ public class OrderSerivceImpl implements OrderService {
         List<ProductDTO> products = getProductByIds(productIds);
         Map<Long, ProductDTO> productMap = getProductMap(orderDetails, products);
         if(products == null || products.size() != orderDetails.size()) throw new ProductNotAvailableException("Some products are not available");
-        if(!checkForAvailableQuantity(products, orderDetails)) {
+        if(!checkForAvailableQuantity(orderDetails, productMap)) {
             throw new ProductNotAvailableException("Stock is not available");
         }
         Order order = new Order();
@@ -86,14 +86,11 @@ public class OrderSerivceImpl implements OrderService {
                 .block();
     }
 
-    private boolean checkForAvailableQuantity(List<ProductDTO> products, List<OrderDetail> orderDetails) {
-        for(ProductDTO product: products) {
-            for(OrderDetail orderDetail: orderDetails) {
-                if(product.getId() == orderDetail.getProductId()) {
-                    if(orderDetail.getQuantity() > product.getAvailableQuantity()) {
-                        return false;
-                    }
-                }
+    private boolean checkForAvailableQuantity(List<OrderDetail> orderDetails, Map<Long, ProductDTO> productMap) {
+        for(OrderDetail orderDetail: orderDetails) {
+            ProductDTO currentProduct = productMap.get(orderDetail.getProductId());
+            if(orderDetail.getQuantity() > currentProduct.getAvailableQuantity()) {
+                return false;
             }
         }
         return true;
