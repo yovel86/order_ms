@@ -3,8 +3,8 @@ package com.projects.order_ms.controllers;
 import com.projects.order_ms.dtos.*;
 import com.projects.order_ms.dtos.ResponseStatus;
 import com.projects.order_ms.models.Order;
+import com.projects.order_ms.models.OrderProduct;
 import com.projects.order_ms.services.OrderService;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,7 +47,6 @@ public class OrderController {
         CreateOrderResponseDTO responseDTO = new CreateOrderResponseDTO();
         try {
             Order order = this.orderService.createOrder(userId, orderDetails);
-            this.orderService.updateOrderProducts(orderDetails, order);
             this.orderService.updateProductQuantity(orderDetails);
             responseDTO.setOrder(order);
             responseDTO.setResponseStatus(ResponseStatus.SUCCESS);
@@ -70,6 +69,11 @@ public class OrderController {
             responseDTO.setResponseStatus(ResponseStatus.FAILURE);
         }
         return responseDTO;
+    }
+
+    @GetMapping("/trending")
+    public List<Long> getTrendingProductIds() {
+        return this.orderService.getTrendingProductIds();
     }
 
 }

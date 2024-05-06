@@ -8,17 +8,13 @@ import com.projects.order_ms.models.OrderProduct;
 import com.projects.order_ms.models.OrderStatus;
 import com.projects.order_ms.repositories.OrderProductRepository;
 import com.projects.order_ms.repositories.OrderRepository;
-import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderSerivceImpl implements OrderService {
@@ -37,9 +33,6 @@ public class OrderSerivceImpl implements OrderService {
 
     @Override
     public Order createOrder(long userId, List<OrderDetail> orderDetails) throws ProductNotAvailableException {
-        // Check for Product Availability
-        // If products are available create the Order
-        // Get Products
         List<Long> productIds = orderDetails.stream().map(OrderDetail::getProductId).toList();
         List<ProductDTO> products = getProductByIds(productIds);
         Map<Long, ProductDTO> productMap = getProductMap(orderDetails, products);
@@ -53,6 +46,8 @@ public class OrderSerivceImpl implements OrderService {
         order.setOrderStatus(OrderStatus.PLACED);
         double totalAmount = getTotalAmount(orderDetails, productMap);
         order.setTotalAmount(totalAmount);
+        List<OrderProduct> orderProducts = createOrderProducts(orderDetails);
+        order.setOrderProducts(orderProducts);
         return this.orderRepository.save(order);
     }
 
@@ -115,16 +110,15 @@ public class OrderSerivceImpl implements OrderService {
     }
 
     @Override
-    public void updateOrderProducts(List<OrderDetail> orderDetails, Order order) {
+    public List<OrderProduct> createOrderProducts(List<OrderDetail> orderDetails) {
         List<OrderProduct> orderProducts = new ArrayList<>();
         for(OrderDetail orderDetail: orderDetails) {
             OrderProduct orderProduct = new OrderProduct();
-            orderProduct.setOrderId(order.getId());
             orderProduct.setProductId(orderDetail.getProductId());
             orderProduct.setQuantity(orderDetail.getQuantity());
             orderProducts.add(orderProduct);
         }
-        this.orderProductRepository.saveAll(orderProducts);
+        return this.orderProductRepository.saveAll(orderProducts);
     }
 
     private Map<Long, ProductDTO> getProductMap(List<OrderDetail> orderDetails, List<ProductDTO> products) {
@@ -160,6 +154,12 @@ public class OrderSerivceImpl implements OrderService {
                                                         .block();
             System.out.println(responseDTO.getMessage());
         }
+    }
+
+    @Override
+    public List<Long> getTrendingProductIds() {
+        List<OrderProduct> orderProducts = this.orderProductRepository.findTrendingProducts();
+        return orderProducts.stream().map(OrderProduct::getProductId).toList();
     }
 
 }

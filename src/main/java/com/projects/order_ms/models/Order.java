@@ -1,9 +1,6 @@
 package com.projects.order_ms.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -17,4 +14,6 @@ public class Order extends BaseModel {
     private Date orderDate;
     @Enumerated(value = EnumType.STRING)
     private OrderStatus orderStatus;
+    @OneToMany
+    private List<OrderProduct> orderProducts;
 }

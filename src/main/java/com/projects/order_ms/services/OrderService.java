@@ -5,6 +5,7 @@ import com.projects.order_ms.dtos.ProductDTO;
 import com.projects.order_ms.exceptions.OrderNotFoundException;
 import com.projects.order_ms.exceptions.ProductNotAvailableException;
 import com.projects.order_ms.models.Order;
+import com.projects.order_ms.models.OrderProduct;
 
 import java.util.List;
 import java.util.Map;
@@ -19,8 +20,10 @@ public interface OrderService {
 
     void deleteOrder(long orderId) throws OrderNotFoundException;
 
-    void updateOrderProducts(List<OrderDetail> orderDetails, Order order);
+    List<OrderProduct> createOrderProducts(List<OrderDetail> orderDetails);
 
     void updateProductQuantity(List<OrderDetail> orderDetails);
+
+    List<Long> getTrendingProductIds();
 
 }
