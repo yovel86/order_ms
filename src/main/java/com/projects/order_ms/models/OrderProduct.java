@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data @Entity
 public class OrderProduct extends BaseModel {
-    @ManyToOne
-    private Order order;
+    private long orderId;
     private long productId;
     private int quantity;
 }
