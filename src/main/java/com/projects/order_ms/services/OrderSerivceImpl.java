@@ -10,6 +10,7 @@ import com.projects.order_ms.repositories.OrderProductRepository;
 import com.projects.order_ms.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,7 +23,7 @@ public class OrderSerivceImpl implements OrderService {
     private final WebClient webClient;
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
-    private final String BASE_URL = "http://localhost:8080/products";
+    private final String BASE_URL = "http://localhost:8081/products";
 
     @Autowired
     public OrderSerivceImpl(WebClient webClient, OrderRepository orderRepository, OrderProductRepository orderProductRepository) {
@@ -32,9 +33,9 @@ public class OrderSerivceImpl implements OrderService {
     }
 
     @Override
-    public Order createOrder(long userId, List<OrderDetail> orderDetails) throws ProductNotAvailableException {
+    public Order createOrder(long userId, List<OrderDetail> orderDetails, String token) throws ProductNotAvailableException {
         List<Long> productIds = orderDetails.stream().map(OrderDetail::getProductId).toList();
-        List<ProductDTO> products = getProductByIds(productIds);
+        List<ProductDTO> products = getProductByIds(productIds, token);
         Map<Long, ProductDTO> productMap = getProductMap(orderDetails, products);
         if(products == null || products.size() != orderDetails.size()) throw new ProductNotAvailableException("Some products are not available");
         if(!checkForAvailableQuantity(orderDetails, productMap)) {
@@ -73,17 +74,18 @@ public class OrderSerivceImpl implements OrderService {
         return orderOptional.get();
     }
 
-    private List<ProductDTO> getProductByIds(List<Long> productIds) {
+    private List<ProductDTO> getProductByIds(List<Long> productIds, String token) {
         GetProductsRequestDTO requestDTO = new GetProductsRequestDTO();
         requestDTO.setProductIds(productIds);
-        return this.webClient.post()
+        ResponseEntity<ListResponse> response = this.webClient.post()
                 .uri(BASE_URL + "/details")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Auth", token)
                 .body(BodyInserters.fromValue(requestDTO))
                 .retrieve()
-                .bodyToFlux(ProductDTO.class)
-                .collectList()
+                .toEntity(ListResponse.class)
                 .block();
+        return response.getBody().getProducts();
     }
 
     private boolean checkForAvailableQuantity(List<OrderDetail> orderDetails, Map<Long, ProductDTO> productMap) {
@@ -131,9 +133,9 @@ public class OrderSerivceImpl implements OrderService {
     }
 
     @Override
-    public void updateProductQuantity(List<OrderDetail> orderDetails) {
+    public void updateProductQuantity(List<OrderDetail> orderDetails, String token) {
         List<Long> productIds = orderDetails.stream().map(OrderDetail::getProductId).toList();
-        List<ProductDTO> products = getProductByIds(productIds);
+        List<ProductDTO> products = getProductByIds(productIds, token);
         Map<Long, ProductDTO> productMap = getProductMap(orderDetails, products);
         for(OrderDetail orderDetail: orderDetails) {
             ProductDTO currentProduct = productMap.get(orderDetail.getProductId());
@@ -144,6 +146,7 @@ public class OrderSerivceImpl implements OrderService {
             UpdateQuantityResponseDTO responseDTO = this.webClient
                                                         .patch()
                                                         .uri(BASE_URL + "/" + currentProduct.getId() + "/available_quantity")
+                                                        .header("Auth", token)
                                                         .contentType(MediaType.APPLICATION_JSON)
                                                         .body(BodyInserters.fromValue(requestDTO))
                                                         .retrieve()

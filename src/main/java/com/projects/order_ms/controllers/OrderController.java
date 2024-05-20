@@ -41,13 +41,13 @@ public class OrderController {
     }
 
     @PostMapping
-    public CreateOrderResponseDTO createOrder(@RequestBody CreateOrderRequestDTO requestDTO) {
+    public CreateOrderResponseDTO createOrder(@RequestBody CreateOrderRequestDTO requestDTO, @RequestHeader("Auth") String token) {
         long userId = requestDTO.getUserId();
         List<OrderDetail> orderDetails = requestDTO.getOrderDetails();
         CreateOrderResponseDTO responseDTO = new CreateOrderResponseDTO();
         try {
-            Order order = this.orderService.createOrder(userId, orderDetails);
-            this.orderService.updateProductQuantity(orderDetails);
+            Order order = this.orderService.createOrder(userId, orderDetails, token);
+            this.orderService.updateProductQuantity(orderDetails, token);
             responseDTO.setOrder(order);
             responseDTO.setResponseStatus(ResponseStatus.SUCCESS);
         } catch (Exception e) {

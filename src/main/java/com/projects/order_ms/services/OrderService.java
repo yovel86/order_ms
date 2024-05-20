@@ -16,13 +16,13 @@ public interface OrderService {
 
     Order getOrderById(long orderId) throws OrderNotFoundException;
 
-    Order createOrder(long userId, List<OrderDetail> orderDetails) throws ProductNotAvailableException;
+    Order createOrder(long userId, List<OrderDetail> orderDetails, String token) throws ProductNotAvailableException;
 
     void deleteOrder(long orderId) throws OrderNotFoundException;
 
     List<OrderProduct> createOrderProducts(List<OrderDetail> orderDetails);
 
-    void updateProductQuantity(List<OrderDetail> orderDetails);
+    void updateProductQuantity(List<OrderDetail> orderDetails, String token);
 
     List<Long> getTrendingProductIds();
 
