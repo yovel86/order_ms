@@ -6,6 +6,8 @@ import com.projects.order_ms.models.Order;
 import com.projects.order_ms.models.OrderProduct;
 import com.projects.order_ms.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -71,9 +73,22 @@ public class OrderController {
         return responseDTO;
     }
 
+    @GetMapping("/{id}/amount")
+    public ResponseEntity<Double> getOrderAmount(@PathVariable("id") long orderId) {
+        try {
+            Order order = this.orderService.getOrderById(orderId);
+            if(order == null) return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(order.getTotalAmount(), HttpStatus.OK);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        }
+    }
+
     @GetMapping("/trending")
     public List<Long> getTrendingProductIds() {
         return this.orderService.getTrendingProductIds();
     }
+
 
 }
